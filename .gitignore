@@ -1,0 +1,9 @@
+transcripts/
+__pycache__/
+*.pyc
+*.mp3
+*.m4a
+*.vtt
+*.srt
+.venv/
+.DS_Store
