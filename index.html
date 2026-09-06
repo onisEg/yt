@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تفريغ — كلام الفيديو نص</title>
+<meta name="description" content="حوّل كلام أي فيديو أو ملف صوت إلى نص مكتوب.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDEBF3;
+    --card:#F7F6FA;
+    --ink:#1B1830;
+    --ink-soft:#5A5478;
+    --line:#D3CEE2;
+    --signal:#3A2FB8;
+    --hot:#C43C6B;
+    --ok:#1F7A5A;
+    --r:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"IBM Plex Sans Arabic",system-ui,"Segoe UI",Tahoma,sans-serif;
+    font-weight:400;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:660px;margin:0 auto;padding:32px 20px 72px}
+
+  /* ---------- hero ---------- */
+  .hero{padding:28px 0 8px}
+  .wave{display:flex;align-items:center;gap:4px;height:56px;margin-bottom:22px}
+  .wave i{
+    display:block;width:4px;border-radius:2px;background:var(--signal);
+    height:8px;opacity:.85;
+    animation:rise .9s cubic-bezier(.2,.8,.3,1) both;
+  }
+  .wave.run i{animation:pulse 1.05s ease-in-out infinite alternate}
+  @keyframes rise{from{height:4px;opacity:.25}to{height:var(--h);opacity:.85}}
+  @keyframes pulse{from{height:6px}to{height:var(--h)}}
+  h1{
+    font-size:clamp(2rem,7vw,2.9rem);font-weight:700;line-height:1.25;
+    margin:0 0 10px;letter-spacing:-.02em;
+  }
+  .lede{font-size:1.06rem;color:var(--ink-soft);margin:0;max-width:46ch}
+
+  /* ---------- tabs ---------- */
+  .tabs{display:flex;gap:0;margin:34px 0 0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--card)}
+  .tabs button{
+    flex:1;appearance:none;border:0;background:transparent;cursor:pointer;
+    font-family:inherit;font-size:.98rem;font-weight:500;color:var(--ink-soft);
+    padding:13px 10px;transition:background .15s,color .15s;
+  }
+  .tabs button[aria-selected="true"]{background:var(--ink);color:#fff}
+  .tabs button:focus-visible{outline:2px solid var(--signal);outline-offset:-3px}
+
+  .panel{
+    border:1px solid var(--line);border-top:0;
+    border-radius:0 0 var(--r) var(--r);background:var(--card);
+    padding:24px 20px;margin-bottom:26px;
+  }
+  .panel[hidden]{display:none}
+
+  label{display:block;font-size:.9rem;font-weight:500;margin-bottom:7px}
+  .hint{font-size:.88rem;color:var(--ink-soft);margin:8px 0 0}
+  input[type=url],select{
+    width:100%;font-family:inherit;font-size:1rem;color:var(--ink);
+    background:#fff;border:1px solid var(--line);border-radius:10px;
+    padding:11px 13px;
+  }
+  input[type=url]{direction:ltr;text-align:left}
+  input:focus,select:focus{outline:2px solid var(--signal);outline-offset:1px;border-color:transparent}
+
+  .row{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+  .btn{
+    appearance:none;font-family:inherit;font-size:.95rem;font-weight:500;
+    padding:11px 18px;border-radius:10px;cursor:pointer;border:1px solid var(--ink);
+    background:var(--ink);color:#fff;transition:transform .08s,opacity .15s;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:transparent;color:var(--ink)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+
+  .drop{
+    border:1.5px dashed var(--line);border-radius:12px;background:#fff;
+    padding:30px 18px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;
+  }
+  .drop:hover,.drop.over{border-color:var(--signal);background:#fbfaff}
+  .drop strong{display:block;font-weight:600;margin-bottom:4px}
+  .drop span{font-size:.9rem;color:var(--ink-soft)}
+
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+  @media(max-width:460px){.fields{grid-template-columns:1fr}}
+
+  .status{
+    margin-top:16px;font-size:.93rem;color:var(--ink-soft);
+    display:flex;align-items:center;gap:9px;min-height:22px;
+  }
+  .status.err{color:var(--hot)}
+  .status.done{color:var(--ok)}
+  .bar{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:12px}
+  .bar i{display:block;height:100%;width:0;background:var(--signal);transition:width .25s}
+
+  /* ---------- output ---------- */
+  .out{margin-top:26px}
+  .out[hidden]{display:none}
+  .out h2{font-size:1.05rem;font-weight:600;margin:0 0 12px}
+  .text{
+    background:#fff;border:1px solid var(--line);border-radius:12px;
+    padding:20px;white-space:pre-wrap;font-size:1.02rem;line-height:1.95;
+    max-height:440px;overflow:auto;
+  }
+
+  /* ---------- steps / footer ---------- */
+  .note{
+    background:#fff;border:1px solid var(--line);border-right:3px solid var(--signal);
+    border-radius:10px;padding:15px 17px;font-size:.94rem;color:var(--ink-soft);margin-top:18px;
+  }
+  .note b{color:var(--ink);font-weight:600}
+  code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86em;
+    background:#E4E1EE;padding:2px 6px;border-radius:5px;direction:ltr;display:inline-block;
+  }
+  pre{
+    background:var(--ink);color:#E9E6F5;border-radius:10px;padding:14px 16px;
+    overflow:auto;direction:ltr;text-align:left;font-size:.85rem;margin:12px 0 0;
+  }
+  footer{
+    margin-top:52px;padding-top:22px;border-top:1px solid var(--line);
+    font-size:.9rem;color:var(--ink-soft);
+  }
+  a{color:var(--signal)}
+  @media(prefers-reduced-motion:reduce){
+    .wave i{animation:none!important;height:var(--h)}
+    *{transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="wave" id="wave" aria-hidden="true"></div>
+    <h1>كلام الفيديو، مكتوب</h1>
+    <p class="lede">حط لينك فيديو أو ارفع ملف صوت، واستلم النص جاهز للنسخ.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-file" aria-selected="true" aria-controls="p-file">ملف من جهازك</button>
+    <button role="tab" id="tab-link" aria-selected="false" aria-controls="p-link">لينك فيديو</button>
+  </div>
+
+  <!-- ================= FILE ================= -->
+  <section class="panel" id="p-file" role="tabpanel" aria-labelledby="tab-file">
+    <div class="drop" id="drop" tabindex="0" role="button">
+      <strong>اختار ملف صوت أو فيديو</strong>
+      <span>أو اسحبه هنا — mp3، m4a، wav، mp4، webm</span>
+    </div>
+    <input type="file" id="file" accept="audio/*,video/*" hidden>
+
+    <div class="fields">
+      <div>
+        <label for="lang">لغة الكلام</label>
+        <select id="lang">
+          <option value="ar" selected>عربي</option>
+          <option value="en">إنجليزي</option>
+          <option value="es">إسباني</option>
+          <option value="tr">تركي</option>
+          <option value="fr">فرنسي</option>
+          <option value="de">ألماني</option>
+        </select>
+      </div>
+      <div>
+        <label for="model">دقة التفريغ</label>
+        <select id="model">
+          <option value="Xenova/whisper-tiny">سريعة — ‏40 ميجا</option>
+          <option value="Xenova/whisper-base" selected>متوسطة — ‏80 ميجا</option>
+          <option value="Xenova/whisper-small">عالية — ‏250 ميجا</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <button class="btn" id="go" disabled>فرّغ الكلام</button>
+    </div>
+
+    <div class="status" id="st"></div>
+    <div class="bar" id="barWrap" hidden><i id="bar"></i></div>
+
+    <div class="note">
+      التفريغ بيحصل جوه المتصفح نفسه — الملف مش بيتبعت لأي سيرفر. أول مرة بس المتصفح بينزّل الموديل،
+      وبعدها بيفضل متخزّن. <b>للعربي</b> اختار «عالية» لو عايز نتيجة تستاهل القراية.
+    </div>
+  </section>
+
+  <!-- ================= LINK ================= -->
+  <section class="panel" id="p-link" role="tabpanel" aria-labelledby="tab-link" hidden>
+    <label for="url">لينك الفيديو</label>
+    <input type="url" id="url" placeholder="https://www.youtube.com/watch?v=…" spellcheck="false">
+    <p class="hint">يوتيوب، تيك توك، فيسبوك، إنستجرام، تويتر.</p>
+
+    <div class="row">
+      <button class="btn" id="toColab">افتح في Colab</button>
+      <button class="btn ghost" id="copyCmd">انسخ أمر التشغيل</button>
+    </div>
+
+    <div class="note">
+      <b>ليه مش بيشتغل هنا على طول؟</b> المتصفح ممنوع أمنيًا إنه يحمّل الفيديو من يوتيوب،
+      فمحتاجين حتة تشتغل بره الصفحة. زرار Colab بيفتحلك نسخة جاهزة شغالة على سيرفر جوجل ببلاش —
+      تلزق اللينك وتدوس تشغيل.
+      <pre id="cmd">python tafrigh.py "LINK"</pre>
+    </div>
+  </section>
+
+  <div class="out" id="out" hidden>
+    <h2>النص</h2>
+    <div class="text" id="text"></div>
+    <div class="row">
+      <button class="btn" id="copy">انسخ النص</button>
+      <button class="btn ghost" id="dl">نزّل ملف .txt</button>
+    </div>
+  </div>
+
+  <footer>
+    الكود مفتوح على <a href="https://github.com/onisEg/yt">GitHub</a> —
+    فيه كمان نسخة سطر أوامر تشتغل على جهازك بدقة أعلى.
+  </footer>
+</div>
+
+<script type="module">
+const $ = s => document.querySelector(s);
+
+/* ---------- hero waveform ---------- */
+const heights = [14,26,42,20,50,32,12,38,24,46,18,30,10,44,22,36,16,28,48,20,34,12,40,24,18,30,14,26,10];
+const wave = $('#wave');
+heights.forEach((h,i)=>{
+  const b=document.createElement('i');
+  b.style.setProperty('--h',h+'px');
+  b.style.animationDelay=(i*28)+'ms';
+  wave.appendChild(b);
+});
+
+/* ---------- tabs ---------- */
+const tabs=[['#tab-file','#p-file'],['#tab-link','#p-link']];
+tabs.forEach(([t])=>$(t).addEventListener('click',()=>{
+  tabs.forEach(([tt,pp])=>{
+    const on = tt===t;
+    $(tt).setAttribute('aria-selected',on);
+    $(pp).hidden=!on;
+  });
+}));
+
+/* ---------- link tab ---------- */
+const COLAB='https://colab.research.google.com/github/onisEg/yt/blob/main/tafrigh_colab.ipynb';
+$('#url').addEventListener('input',e=>{
+  const u=e.target.value.trim();
+  $('#cmd').textContent=`python tafrigh.py "${u||'LINK'}"`;
+});
+$('#toColab').addEventListener('click',async()=>{
+  const u=$('#url').value.trim();
+  if(u){ try{ await navigator.clipboard.writeText(u); }catch{} }
+  window.open(COLAB,'_blank','noopener');
+});
+$('#copyCmd').addEventListener('click',async e=>{
+  try{
+    await navigator.clipboard.writeText($('#cmd').textContent);
+    const b=e.target; b.textContent='اتنسخ'; setTimeout(()=>b.textContent='انسخ أمر التشغيل',1500);
+  }catch{}
+});
+
+/* ---------- file tab ---------- */
+let picked=null, transcriber=null, loadedModel=null;
+const st=$('#st'), bar=$('#bar'), barWrap=$('#barWrap');
+const say=(m,cls='')=>{ st.textContent=m; st.className='status '+cls; };
+const progress=p=>{ barWrap.hidden=p==null; if(p!=null) bar.style.width=Math.round(p)+'%'; };
+
+$('#drop').addEventListener('click',()=>$('#file').click());
+$('#drop').addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#file').click();} });
+['dragover','dragleave','drop'].forEach(ev=>
+  $('#drop').addEventListener(ev,e=>{
+    e.preventDefault();
+    $('#drop').classList.toggle('over',ev==='dragover');
+    if(ev==='drop'&&e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+  })
+);
+$('#file').addEventListener('change',e=>{ if(e.target.files[0]) setFile(e.target.files[0]); });
+
+function setFile(f){
+  picked=f;
+  $('#drop').innerHTML=`<strong>${f.name}</strong><span>${(f.size/1048576).toFixed(1)} ميجا — اضغط للتغيير</span>`;
+  $('#go').disabled=false;
+  say('');
+}
+
+async function decode(file){
+  const buf=await file.arrayBuffer();
+  const ctx=new (window.AudioContext||window.webkitAudioContext)({sampleRate:16000});
+  const audio=await ctx.decodeAudioData(buf);
+  ctx.close();
+  if(audio.numberOfChannels===1) return audio.getChannelData(0);
+  const L=audio.getChannelData(0), R=audio.getChannelData(1), out=new Float32Array(L.length);
+  for(let i=0;i<L.length;i++) out[i]=(L[i]+R[i])/2;
+  return out;
+}
+
+$('#go').addEventListener('click',async()=>{
+  if(!picked) return;
+  const modelId=$('#model').value, lang=$('#lang').value;
+  $('#go').disabled=true; $('#out').hidden=true;
+
+  try{
+    say('بقرأ الملف…'); progress(null);
+    const audio=await decode(picked).catch(()=>{
+      throw new Error('المتصفح مش عارف يفتح الملف ده. جرّب تحوّله mp3 أو wav.');
+    });
+
+    if(loadedModel!==modelId){
+      say('بنزّل الموديل — أول مرة بس…'); progress(0);
+      const {pipeline}=await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.2');
+      transcriber=await pipeline('automatic-speech-recognition',modelId,{
+        dtype:'q8',
+        progress_callback:p=>{ if(p.status==='progress'&&p.progress!=null) progress(p.progress); }
+      });
+      loadedModel=modelId;
+    }
+
+    const mins=Math.round(audio.length/16000/60);
+    say(`بفرّغ الكلام… (${mins||'أقل من'} ${mins?'دقيقة':'دقيقة'} صوت)`); progress(null);
+
+    const res=await transcriber(audio,{
+      language:lang, task:'transcribe',
+      chunk_length_s:30, stride_length_s:5,
+    });
+
+    const text=(res.text||'').trim().replace(/(?<=[.!?؟])\s+/g,'\n');
+    if(!text) throw new Error('مطلعش أي كلام من الملف ده.');
+    $('#text').textContent=text;
+    $('#out').hidden=false;
+    say(`تمّ — ${text.split(/\s+/).length} كلمة`,'done');
+    $('#out').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }catch(err){
+    say(err.message||'حصلت مشكلة. جرّب تاني.','err');
+  }finally{
+    $('#go').disabled=false; progress(null);
+  }
+});
+
+/* ---------- output actions ---------- */
+$('#copy').addEventListener('click',async e=>{
+  await navigator.clipboard.writeText($('#text').textContent);
+  e.target.textContent='اتنسخ'; setTimeout(()=>e.target.textContent='انسخ النص',1500);
+});
+$('#dl').addEventListener('click',()=>{
+  const blob=new Blob([$('#text').textContent],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=(picked?picked.name.replace(/\.[^.]+$/,''):'transcript')+'.txt';
+  a.click(); URL.revokeObjectURL(a.href);
+});
+</script>
+</body>
+</html>
