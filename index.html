@@ -138,7 +138,7 @@
   <section class="panel" id="p-link" role="tabpanel" aria-labelledby="tab-link">
     <label for="url">لينك الفيديو</label>
     <input type="url" id="url" placeholder="https://www.youtube.com/watch?v=…" spellcheck="false">
-    <p class="hint">يوتيوب، تيك توك، فيسبوك، إنستجرام، تويتر.</p>
+    <p class="hint">يوتيوب — وباقي المنصات لو موصّل السيرفر الكامل.</p>
 
     <div class="fields">
       <div>
@@ -171,24 +171,28 @@
     <div class="status" id="st"></div>
 
     <div class="note warn" id="noServer" hidden>
-      <b>محتاج توصل السيرفر مرة واحدة.</b> الصفحة دي مبتقدرش تحمّل الفيديو بنفسها —
-      المتصفح ممنوع من ده. افتح «إعدادات السيرفر» تحت واتبع الخطوات، ٣ دقايق ومش هتعيدها تاني.
+      <b>محتاج توصل السيرفر مرة واحدة.</b> الصفحة دي مبتقدرش توصل ليوتيوب بنفسها —
+      المتصفح ممنوع من ده. افتح «إعدادات السيرفر» تحت، دقيقتين ومش هتعيدها تاني.
     </div>
 
     <details class="setup" id="setup">
       <summary>إعدادات السيرفر</summary>
       <ol>
-        <li>افتح <a href="https://huggingface.co/new-space" target="_blank" rel="noopener">huggingface.co/new-space</a> واعمل Space جديد، اختار <b>Docker → Blank</b>.</li>
-        <li>من تاب Files ارفع الأربع ملفات اللي في مجلد <code>server/</code> بتاع <a href="https://github.com/onisEg/yt/tree/main/server" target="_blank" rel="noopener">الريبو</a>.</li>
-        <li>استنى البناء يخلص (٢–٣ دقايق) لحد ما يبقى <b>Running</b>.</li>
-        <li>الصق لينك الـ Space هنا واحفظه.</li>
+        <li>افتح <a href="https://dash.cloudflare.com" target="_blank" rel="noopener">dash.cloudflare.com</a> واعمل حساب مجاني.</li>
+        <li>‏<b>Compute (Workers)</b> ← <b>Create</b> ← <b>Start with Hello World</b> ← <b>Deploy</b>.</li>
+        <li>دوس <b>Edit code</b>، امسح اللي جوه، والزق محتوى <a href="https://github.com/onisEg/yt/blob/main/worker/worker.js" target="_blank" rel="noopener">worker.js</a> ← <b>Deploy</b>.</li>
+        <li>انسخ لينك الـ Worker (<code>...workers.dev</code>) والصقه هنا.</li>
       </ol>
       <label for="api">عنوان السيرفر</label>
-      <input type="text" id="api" placeholder="https://onisEg-tafrigh.hf.space" spellcheck="false">
+      <input type="text" id="api" placeholder="https://tafrigh.your-name.workers.dev" spellcheck="false">
       <div class="row">
         <button class="btn ghost" id="saveApi">احفظ</button>
         <span class="hint" id="apiState"></span>
       </div>
+      <p class="hint">
+        الـ Worker بيجيب الترجمة الجاهزة من يوتيوب في ثواني. لو عايز Whisper كامل وكل المنصات،
+        فيه نسخة Docker في <a href="https://github.com/onisEg/yt/tree/main/server" target="_blank" rel="noopener">مجلد server</a>.
+      </p>
     </details>
   </section>
 
@@ -312,7 +316,7 @@ $('#saveApi').addEventListener('click',async()=>{
     $('#noServer').hidden=true;
     setTimeout(()=>{$('#setup').open=false;},900);
   }catch{
-    $('#apiState').textContent='مردّش. اتأكد إن الـ Space شغّال (Running).';
+    $('#apiState').textContent='مردّش. اتأكد إن اللينك صح وإن الـ Worker منشور.';
   }
 });
 
@@ -358,7 +362,7 @@ $('#go').addEventListener('click',async()=>{
   }catch(err){
     stopTimer();
     const m=err.message==='Failed to fetch'
-      ? 'مقدرتش أوصل للسيرفر. يمكن يكون نايم — افتح لينك الـ Space وجرّب تاني.'
+      ? 'مقدرتش أوصل للسيرفر. اتأكد إنه شغّال وجرّب تاني.'
       : err.message;
     say(m,'err');
   }finally{
