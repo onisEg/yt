@@ -8,12 +8,16 @@ app_port: 7860
 pinned: false
 ---
 
-# سيرفر التفريغ
+# سيرفر التفريغ الكامل (Docker)
 
-ياخد لينك فيديو ويرجّع النص.
+النسخة دي بتنزّل الصوت وتفرّغه بـ Whisper — فبتشتغل مع كل المنصات ومع الفيديوهات
+اللي مالهاش ترجمة جاهزة.
+
+محتاجة سيرفر فيه رام ومعالج — مش زي الـ Worker الخفيف.
 
 ```
-GET /transcribe?url=LINK&lang=ar&model=small
+GET /health
+GET /transcribe?url=LINK&lang=ar&model=small&force=0
 ```
 
 | الباراميتر | الوظيفة |
@@ -21,15 +25,15 @@ GET /transcribe?url=LINK&lang=ar&model=small
 | `url` | لينك الفيديو (مطلوب) |
 | `lang` | `auto` أو `ar` / `en` / `es` / `tr` |
 | `model` | `tiny` / `base` / `small` / `medium` / `large-v3` |
-| `force` | `1` عشان يتجاهل الترجمة الجاهزة ويفرّغ بـ Whisper |
+| `force` | `1` يتجاهل الترجمة الجاهزة ويفرّغ بـ Whisper |
+
+## فين أنشرها
+
+- **سيرفرك أو VPS** — `docker build -t tafrigh . && docker run -p 7860:7860 tafrigh`
+- **[Render](https://render.com)** — فيه خطة مجانية بـ 512 ميجا رام؛ استخدم `tiny` أو `base` بس
+- **Hugging Face Spaces** — بقى محتاج اشتراك PRO للـ Docker Spaces
 
 ## لو يوتيوب رفض الطلب
 
 السيرفرات السحابية أحيانًا يوتيوب بيحجبها. الحل: صدّر كوكيز حسابك من المتصفح
-(إضافة «Get cookies.txt») وحطّ محتوى الملف في متغيّر سرّي اسمه `YT_COOKIES`
-من `Settings ← Variables and secrets`.
-
-## نشر
-
-المجلد ده جاهز للرفع على Hugging Face Space من نوع Docker.
-الملفات المطلوبة: `Dockerfile` و`requirements.txt` و`app.py` و`README.md`.
+(إضافة «Get cookies.txt») وحطّ محتوى الملف في متغيّر بيئة اسمه `YT_COOKIES`.
